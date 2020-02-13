@@ -187,7 +187,9 @@ class Geometry {
 	 * @returns {number} The angle clamped between 0 and π.
 	 */
 	angle(c) {
-		return 0.0;
+		let a = this.vector(c.halfedge.next).unit().negated();
+		let b = this.vector(c.halfedge.next.next).unit();
+		return Math.acos(a.dot(b));
 	}
 
 	/**
@@ -197,9 +199,8 @@ class Geometry {
 	 * @returns {number}
 	 */
 	cotan(h) {
-		// TODO
-
-		return 0.0; // placeholder
+		let angle = this.angle(h.corner);
+		return Math.cos(angle) / Math.sin(angle);
 	}
 
 	/**
@@ -250,12 +251,9 @@ class Geometry {
 		let n = new Vector();
 		for (let f of v.adjacentFaces()) {
 			let normal = this.faceNormal(f);
-
 			n.incrementBy(normal);
 		}
-
 		n.normalize();
-
 		return n;
 	}
 
@@ -266,9 +264,14 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalAreaWeighted(v) {
-		// TODO
-
-		return new Vector(); // placeholder
+		let n = new Vector();
+		for (let f of v.adjacentFaces()) {
+			let normal = this.faceNormal(f);
+			let area = this.area(f);
+			n.incrementBy(normal.times(area));
+		}
+		n.normalize();
+		return n;
 	}
 
 	/**
@@ -302,9 +305,15 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalMeanCurvature(v) {
-		// TODO
-
-		return new Vector(); // placeholder
+		let n = new Vector();
+		for (let c of v.adjacentCorners()) {
+			let h = c.halfedge;
+			let f = h.face;
+			n.incrementBy(this.faceNormal(f).cross(this.vector(h)))
+		}
+		let sign = Math.sign(n.dot(this.vertexNormalAreaWeighted(v)));
+		n.normalize();
+		return n.times(sign);
 	}
 
 	/**
@@ -327,9 +336,15 @@ class Geometry {
 	 * @returns {number}
 	 */
 	angleDefect(v) {
-		// TODO
-
-		return 0.0; // placeholder
+		let incident = 0.0; 
+		for (let c of v.adjacentCorners()) {
+			incident += this.angle(c);
+		}
+		if (v.onBoundary()) {
+			return Math.PI - incident;
+		} else {
+			return 2 * Math.PI - incident;
+		}
 	}
 
 	/**
@@ -349,9 +364,14 @@ class Geometry {
 	 * @returns {number}
 	 */
 	scalarMeanCurvature(v) {
-		// TODO
-
-		return 0.0; // placeholder
+		let n = new Vector();
+		for (let c of v.adjacentCorners()) {
+			let h = c.halfedge;
+			let f = h.face;
+			n.incrementBy(this.faceNormal(f).cross(this.vector(h)))
+		}
+		let sign = Math.sign(n.dot(this.vertexNormalAreaWeighted(v)));
+		return n.times(sign / 2);
 	}
 
 	/**
@@ -360,9 +380,7 @@ class Geometry {
 	 * @returns {number}
 	 */
 	totalAngleDefect() {
-		// TODO
-
-		return 0.0; // placeholder
+		return 2 * Math.PI * this.mesh.eulerCharacteristic();
 	}
 
 	/**
