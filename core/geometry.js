@@ -311,8 +311,8 @@ class Geometry {
 			let f = h.face;
 			n.incrementBy(this.faceNormal(f).cross(this.vector(h)))
 		}
-		let sign = Math.sign(n.dot(this.vertexNormalAreaWeighted(v)));
 		n.normalize();
+		let sign = Math.sign(n.dot(this.vertexNormalAreaWeighted(v)));
 		return n.times(sign);
 	}
 
@@ -371,7 +371,7 @@ class Geometry {
 			n.incrementBy(this.faceNormal(f).cross(this.vector(h)))
 		}
 		let sign = Math.sign(n.dot(this.vertexNormalAreaWeighted(v)));
-		return n.times(sign / 2);
+		return n.times(sign / 2).norm();
 	}
 
 	/**
